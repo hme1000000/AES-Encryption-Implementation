@@ -61,16 +61,36 @@ void substitute_bytes(unsigned char input[16],unsigned char output[4][4])
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////
-void shift_rows(unsigned char input[16],unsigned char output[16])
+void shift_rows(unsigned char input[4][4],unsigned char output[4][4])
 {
 	
 }
+//////////////////////////////////////////////////////////////////////////////////
+void substitute_byte(unsigned char input[4][4],unsigned int word_output[4])
+{
+}
+//////////////////////////////////////////////////////////////////////////////////
+void substitute_mix_colomns(unsigned char input[4][4],unsigned int word_output[4])
+{
+}
+////////////////////////////////////////////////////////////////////////////////
+void add_key(unsigned int word_input[4],unsigned int key[4])
+{
+}
+//////////////////////////////////////////////////////////////////////////////
+void expand_key(unsigned int key[4],unsigned int expanded_key[44])
+{
+}
+/////////////////////////////////////////////////////////////////////////
+
+
+
 
 int main()
 {
-	ifstream myfile ("scanner_output.txt");
-	freopen("s_box.txt","w",stdout);
 	// code used to generate s_box_after_shift
+	//ifstream myfile ("scanner_output.txt");
+	//freopen("s_box.txt","w",stdout);	
 	/*int output[256];
 	cout<<"{\n";
 	for(int i=0;i<256;i++)
