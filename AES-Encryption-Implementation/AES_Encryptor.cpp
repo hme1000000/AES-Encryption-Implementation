@@ -63,18 +63,18 @@ unsigned char Rcon[11] = {0x0,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x60,0x1B,0x36}
 	}
 }*/
 //////////////////////////////////////////////////////////////////////////////////
-void shift_rows(int input[4][4],int output[4][4])
+void shift_rows(unsigned int input[4],unsigned int output[4][4])
 {
 	for(int i=0;i<4;i++)
 	{
-		output[0][i] = input[0][i];
-		output[1][i] = input[1][(i+1)%4];
-		output[2][i] = input[2][(i+2)%4];
-		output[3][i] = input[3][(i+3)%4];
+		output[0][i] = input[i]>>24;
+		output[1][i] = (input[(i+1)%4]>>16)&0xF;
+		output[2][i] = (input[(i+2)%4]>>8)&0xF;
+		output[3][i] = (input[(i+3)%4])&0xF;
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////
-void substitute_byte(unsigned char input[4][4],unsigned int word_output[4],int output[4][4])
+void substitute_byte(unsigned int input[4][4],unsigned int output[4][4])
 {
 	for(int i=0;i<4;i++)
 	{
@@ -86,7 +86,7 @@ void substitute_byte(unsigned char input[4][4],unsigned int word_output[4],int o
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////
-void substitute_mix_colomns(int input[4][4],unsigned int word_output[4],int output[4][4])
+void substitute_mix_colomns(unsigned int input[4][4],unsigned int output[4][4])
 {
 	for(int i=0;i<4;i++)
 	{
@@ -100,11 +100,11 @@ void substitute_mix_colomns(int input[4][4],unsigned int word_output[4],int outp
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-void add_key(unsigned int word_input[4][4],unsigned int key[4],unsigned int output[4])
+void add_key(unsigned int word_input[4][4],unsigned int key[44],unsigned int index,unsigned int output[4])
 {
 	for(int i=0;i<4;i++)
 	{
-		output[i] = ((word_input[0][i]<<3)|(word_input[1][i]<<2)|(word_input[2][i]<<1)|(word_input[3][i]))^key[i];
+		output[i] = ((word_input[0][i]<<24)|(word_input[1][i]<<16)|(word_input[2][i]<<8)|(word_input[3][i]))^key[i+index];
 	}
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -112,23 +112,38 @@ void expand_key(unsigned int key[4][4],unsigned int expanded_key[44])
 {
 	for(int i=0;i<4;i++)
 	{
-		expanded_key[i] = (key[0][i]<<3)|(key[1][i]<<2)|(key[2][i]<<1)|(key[3][i]);
+		expanded_key[i] = (key[0][i]<<24)|(key[1][i]<<16)|(key[2][i]<<8)|(key[3][i]);
 	}
 	for(int i=4;i<44;i++)
 	{
 		unsigned int temp = expanded_key[i-1];
 		if(i%4 == 0)
 		{
-			temp = (temp<<4)|(temp>>12);
-			temp = (s_box[temp>>12]|s_box[(temp>>8)&0xF]|s_box[(temp>>4)&0xF]|s_box[(temp)&0xF])^(Rcon[i/4]<<12);
+			temp = (temp<<8)|(temp>>24);
+			temp = (s_box[temp>>24]|s_box[(temp>>16)&0xF]|s_box[(temp>>8)&0xF]|s_box[(temp)&0xF])^(Rcon[i/4]<<24);
 		}
 		expanded_key[i] = expanded_key[i-4]^temp;
 	}
 }
 /////////////////////////////////////////////////////////////////////////
-void encrypt(int input[4][4],unsigned int output)
+void encrypt(unsigned int input[4][4],unsigned int input_key[4][4],unsigned int output[4])
 {
-
+	unsigned int key[44];
+	expand_key(input_key,key);
+	unsigned int add_out[4];	
+	add_key(input,key,0,add_out);
+	unsigned int shift_out[4][4];
+	for(int i=1;i<10;i++)
+	{		
+		shift_rows(add_out,shift_out);
+		unsigned int mix_out[4][4];
+		substitute_mix_colomns(shift_out,mix_out);
+		add_key(mix_out,key,(4*i),add_out);
+	}
+	shift_rows(add_out,shift_out);
+	unsigned int sub_out[4][4];
+	substitute_byte(shift_out,sub_out);
+	add_key(sub_out,key,40,output);
 }
 
 
