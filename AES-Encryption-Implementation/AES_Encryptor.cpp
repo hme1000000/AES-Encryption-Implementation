@@ -49,6 +49,8 @@ unsigned char s_box_after_mul[256] =
 		0x3, 0x59, 0x9, 0x1a, 0x65, 0xd7, 0x84, 0xd0, 0x82, 0x29, 0x5a, 0x1e, 0x7b, 0xa8, 0x6d, 0x2c,
 	};
 
+unsigned char Rcon[11] = {0x0,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x60,0x1B,0x36};
+
 ///////////////////////////////////////////////////////////////////////////////////
 /*void substitute_bytes(unsigned char input[16],unsigned char output[4][4])
 {
@@ -72,13 +74,14 @@ void shift_rows(int input[4][4],int output[4][4])
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////
-void substitute_byte(unsigned char input[4][4],unsigned int word_output[4])
+void substitute_byte(unsigned char input[4][4],unsigned int word_output[4],int output[4][4])
 {
 	for(int i=0;i<4;i++)
 	{
 		for(int j=0;j<4;j++)
 		{
-			word_output[i] = (word_output[i]<<(j*8))|s_box[input[j][i]];
+			output[j][i] = s_box[input[j][i]];
+			//word_output[i] = (word_output[i]<<(j*8))|s_box[input[j][i]];
 		}
 	}
 }
@@ -91,26 +94,42 @@ void substitute_mix_colomns(int input[4][4],unsigned int word_output[4],int outp
 		{
 			output[j][i] = ((s_box_after_mul[input[j][i]])^
 				(s_box_after_mul[input[(j+1)%4][i]])^(s_box[input[(j+1)%4][i]])^(s_box[input[(j+2)%4][i]])^(s_box[input[(j+3)%4][i]]));
-			word_output[i] = (word_output[i]<<(j*8))|((s_box_after_mul[input[j][i]])^
-				(s_box_after_mul[input[(j+1)%4][i]])^(s_box[input[(j+1)%4][i]])^(s_box[input[(j+2)%4][i]])^(s_box[input[(j+3)%4][i]]));
+			/*word_output[i] = (word_output[i]<<(j*8))|((s_box_after_mul[input[j][i]])^
+				(s_box_after_mul[input[(j+1)%4][i]])^(s_box[input[(j+1)%4][i]])^(s_box[input[(j+2)%4][i]])^(s_box[input[(j+3)%4][i]]));*/
 		}
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-void add_key(unsigned int word_input[4],unsigned int key[4],unsigned int output[4])
+void add_key(unsigned int word_input[4][4],unsigned int key[4],unsigned int output[4])
 {
 	for(int i=0;i<4;i++)
 	{
-		output[i] = word_input[i]^key[i];
+		output[i] = ((word_input[0][i]<<3)|(word_input[1][i]<<2)|(word_input[2][i]<<1)|(word_input[3][i]))^key[i];
 	}
 }
 //////////////////////////////////////////////////////////////////////////////
-void expand_key(unsigned int key[4],unsigned int expanded_key[44])
+void expand_key(unsigned int key[4][4],unsigned int expanded_key[44])
+{
+	for(int i=0;i<4;i++)
+	{
+		expanded_key[i] = (key[0][i]<<3)|(key[1][i]<<2)|(key[2][i]<<1)|(key[3][i]);
+	}
+	for(int i=4;i<44;i++)
+	{
+		unsigned int temp = expanded_key[i-1];
+		if(i%4 == 0)
+		{
+			temp = (temp<<4)|(temp>>12);
+			temp = (s_box[temp>>12]|s_box[(temp>>8)&0xF]|s_box[(temp>>4)&0xF]|s_box[(temp)&0xF])^(Rcon[i/4]<<12);
+		}
+		expanded_key[i] = expanded_key[i-4]^temp;
+	}
+}
+/////////////////////////////////////////////////////////////////////////
+void encrypt(int input[4][4],unsigned int output)
 {
 
 }
-/////////////////////////////////////////////////////////////////////////
-
 
 
 
