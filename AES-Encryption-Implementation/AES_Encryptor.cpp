@@ -4,11 +4,10 @@
 #include <fstream>
 #include <cstdio>
 #include <cstdint>
+#include <time.h>
 using namespace std;
 
-//uint8_t s_box
-
-unsigned short s_box[256] = 
+unsigned char s_box[256] = 
  {
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
     0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -29,7 +28,7 @@ unsigned short s_box[256] =
 
  };
 
-unsigned short s_box_after_mul[256] =
+unsigned char s_box_after_mul[256] =
 	{
 		0xc6, 0xf8, 0xee, 0xf6, 0xff, 0xd6, 0xde, 0x91, 0x60, 0x2, 0xce, 0x56, 0xe7, 0xb5, 0x4d, 0xec,
 		0x8f, 0x1f, 0x89, 0xfa, 0xef, 0xb2, 0x8e, 0xfb, 0x41, 0xb3, 0x5f, 0x45, 0x23, 0x53, 0xe4, 0x9b,
@@ -49,21 +48,10 @@ unsigned short s_box_after_mul[256] =
 		0x3, 0x59, 0x9, 0x1a, 0x65, 0xd7, 0x84, 0xd0, 0x82, 0x29, 0x5a, 0x1e, 0x7b, 0xa8, 0x6d, 0x2c,
 	};
 
-unsigned short Rcon[11] = {0x0,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};
+unsigned char Rcon[11] = {0x0,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};
 
-///////////////////////////////////////////////////////////////////////////////////
-/*void substitute_bytes(unsigned char input[16],unsigned char output[4][4])
-{
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			output[i][j] = s_box[input[j+(4*i)]];
-		}
-	}
-}*/
 //////////////////////////////////////////////////////////////////////////////////
-void shift_rows(unsigned int input[4],unsigned int output[4][4])
+void shift_rows(unsigned int input[4],unsigned char output[4][4])
 {
 	for(int i=0;i<4;i++)
 	{
@@ -74,33 +62,30 @@ void shift_rows(unsigned int input[4],unsigned int output[4][4])
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////
-void substitute_byte(unsigned int input[4][4],unsigned int output[4][4])
+void substitute_byte(unsigned char input[4][4],unsigned int output[4][4])
 {
 	for(int i=0;i<4;i++)
 	{
 		for(int j=0;j<4;j++)
 		{
 			output[j][i] = s_box[input[j][i]];
-			//word_output[i] = (word_output[i]<<(j*8))|s_box[input[j][i]];
 		}
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////
-void substitute_mix_colomns(unsigned int input[4][4],unsigned int output[4][4])
+void substitute_mix_colomns(unsigned char input[4][4],unsigned int output[4][4])
 {
 	for(int i=0;i<4;i++)
 	{
 		for(int j=0;j<4;j++)
 		{
 			output[j][i] = ((s_box_after_mul[input[j][i]])^
-				(s_box_after_mul[input[(j+1)%4][i]])^(s_box[input[(j+1)%4][i]])^(s_box[input[(j+2)%4][i]])^(s_box[input[(j+3)%4][i]]));
-			/*word_output[i] = (word_output[i]<<(j*8))|((s_box_after_mul[input[j][i]])^
-				(s_box_after_mul[input[(j+1)%4][i]])^(s_box[input[(j+1)%4][i]])^(s_box[input[(j+2)%4][i]])^(s_box[input[(j+3)%4][i]]));*/
+				(s_box_after_mul[input[(j+1)%4][i]])^(s_box[input[(j+1)%4][i]])^(s_box[input[(j+2)%4][i]])^(s_box[input[(j+3)%4][i]]));			
 		}
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
-void add_key(unsigned int word_input[4][4],unsigned int key[44],unsigned int index,unsigned int output[4])
+void add_key(unsigned int word_input[4][4],unsigned int key[44],unsigned short index,unsigned int output[4])
 {
 	for(int i=0;i<4;i++)
 	{
@@ -120,97 +105,30 @@ void expand_key(unsigned int key[4][4],unsigned int expanded_key[44])
 		if(i%4 == 0)
 		{
 			temp = (temp<<8)|(temp>>24);
-			cout<<endl<<temp<<endl;
-			cout<<endl<<s_box[temp>>24]<<endl;
-			cout<<endl<<s_box[(temp>>16)&0xFF]<<endl;
-			cout<<endl<<s_box[(temp>>8)&0xFF]<<endl;
-			cout<<endl<<s_box[(temp)&0xFF]<<endl;
-			temp = (s_box[temp>>24]<<24|s_box[(temp>>16)&0xFF]<<16|s_box[(temp>>8)&0xFF]<<8|s_box[(temp)&0xFF]);
-			cout<<endl<<temp<<endl;
-			temp = temp ^(Rcon[i/4]<<24);
-			cout<<endl<<temp<<endl;
+			temp = (s_box[temp>>24]<<24|s_box[(temp>>16)&0xFF]<<16|s_box[(temp>>8)&0xFF]<<8|s_box[(temp)&0xFF])^(Rcon[i/4]<<24);
 		}
 		expanded_key[i] = expanded_key[i-4]^temp;
-		cout<<endl<<expanded_key[i]<<endl;
 	}
-	cout<<endl;
 }
 /////////////////////////////////////////////////////////////////////////
 void encrypt(unsigned int input[4][4],unsigned int input_key[4][4],unsigned int output[4])
 {
 	unsigned int key[44];
 	expand_key(input_key,key);
-	for(int i=0;i<44;i++)
-	{		
-		cout<<hex<<key[i]<<endl;
-		
-	}
-	cout<<endl;
 	unsigned int add_out[4];	
 	add_key(input,key,0,add_out);
-	for(int i=0;i<4;i++)
-	{
-		cout<<hex<<add_out[i]<<endl;
-	}
-	cout<<endl;
-	unsigned int shift_out[4][4];
+	unsigned char shift_out[4][4];
 	for(int i=1;i<10;i++)
 	{		
 		shift_rows(add_out,shift_out);
-		for(int i=0;i<4;i++)
-		{
-			for(int j=0;j<4;j++)
-			{
-				cout<<hex<<shift_out[i][j]<<" ";
-			}
-			cout<<endl;
-		}
-		cout<<endl;
 		unsigned int mix_out[4][4];
 		substitute_mix_colomns(shift_out,mix_out);
-		for(int i=0;i<4;i++)
-		{
-			for(int j=0;j<4;j++)
-			{
-				cout<<hex<<mix_out[i][j]<<" ";
-			}
-			cout<<endl;
-		}
-		cout<<endl;
 		add_key(mix_out,key,(4*i),add_out);
-		for(int i=0;i<4;i++)
-		{
-			cout<<hex<<add_out[i]<<endl;
-		}
-		cout<<endl;
 	}
 	shift_rows(add_out,shift_out);
-	for(int i=0;i<4;i++)
-		{
-			for(int j=0;j<4;j++)
-			{
-				cout<<hex<<shift_out[i][j]<<" ";
-			}
-			cout<<endl;
-		}
-		cout<<endl;
 	unsigned int sub_out[4][4];
 	substitute_byte(shift_out,sub_out);
-	for(int i=0;i<4;i++)
-		{
-			for(int j=0;j<4;j++)
-			{
-				cout<<hex<<sub_out[i][j]<<" ";
-			}
-			cout<<endl;
-		}
-		cout<<endl;
 	add_key(sub_out,key,40,output);
-	for(int i=0;i<4;i++)
-		{
-			cout<<hex<<output[i]<<endl;
-		}
-		cout<<endl;
 }
 
 
@@ -218,8 +136,7 @@ void encrypt(unsigned int input[4][4],unsigned int input_key[4][4],unsigned int 
 int main()
 {
 	//cout<<"Enter text"<<endl;
-	freopen("put2.txt","r",stdin);
-	freopen("out.txt","w",stdout);
+	freopen("put.txt","r",stdin);
 	unsigned int input[4][4];
 	for(int i=0;i<4;i++)
 	{
@@ -235,57 +152,21 @@ int main()
 		{
 			cin>>hex>>key[j][i];
 		}
-	}	
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cout<<hex<<input[i][j]<<" ";
-		}
-		cout<<endl;
 	}
-	cout<<endl;
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cout<<hex<<key[i][j]<<" ";
-		}
-		cout<<endl;
-	}
-	cout<<endl;
+	long t1 = clock();
 	unsigned int output[4];
 	encrypt(input,key,output);
 	for(int i=0;i<4;i++)
 	{
-		cout<<hex<<output[i]<<" ";
-		cout<<endl;
+		cout<<hex<<(output[i]>>24)<<" "<<((output[i]>>16)&0xFF)<<" "<<((output[i]>>8)&0xFF)<<" "<<((output[i])&0xFF)<<" ";
 	}
 	cout<<endl;
-	/*int shift_out[4][4];
-	shift_rows(input,shift_out);
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cout<<hex<<shift_out[i][j]<<" ";
-		}
-		cout<<endl;
-	}
-	cout<<endl;
-	unsigned int mix_out[4]={0};
-	int mix[4][4];
-	substitute_mix_colomns(shift_out,mix_out,mix);
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cout<<hex<<mix[i][j]<<" ";
-			//cout<<hex<<(mix_out[j]>>((3-i)*8)&(0xF))<<" ";
-		}
-		cout<<endl;
-	}
-	// code used to generate s_box_after_shift
+	long t2 = clock();
+	cout<<t2-t1<<endl<<endl;
+	return 0;
+}
+
+// code used to generate s_box_after_shift
 	//ifstream myfile ("scanner_output.txt");
 	//freopen("s_box.txt","w",stdout);	
 	/*int output[256];
@@ -314,6 +195,3 @@ int main()
 			cout<<" ";
 	}
 	cout<<"}\n";*/
-	system("pause");
-	return 0;
-}
