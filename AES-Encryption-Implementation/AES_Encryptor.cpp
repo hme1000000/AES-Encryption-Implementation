@@ -152,12 +152,20 @@ int main()
 {
 	//cout<<"Enter text"<<endl;
 	freopen("put.txt","r",stdin);
-	int input[4][4];
+	unsigned int input[4][4];
 	for(int i=0;i<4;i++)
 	{
 		for(int j=0;j<4;j++)
 		{
 			cin>>hex>>input[j][i];
+		}
+	}
+	unsigned int key[4][4];
+	for(int i=0;i<4;i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			cin>>hex>>key[j][i];
 		}
 	}	
 	for(int i=0;i<4;i++)
@@ -169,7 +177,24 @@ int main()
 		cout<<endl;
 	}
 	cout<<endl;
-	int shift_out[4][4];
+	for(int i=0;i<4;i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			cout<<hex<<input[i][j]<<" ";
+		}
+		cout<<endl;
+	}
+	cout<<endl;
+	unsigned int output[4];
+	encrypt(input,key,output);
+	for(int i=0;i<4;i++)
+	{
+		cout<<hex<<output[i]<<" ";
+		cout<<endl;
+	}
+	cout<<endl;
+	/*int shift_out[4][4];
 	shift_rows(input,shift_out);
 	for(int i=0;i<4;i++)
 	{
