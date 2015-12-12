@@ -153,7 +153,7 @@ int main()
 			cin>>hex>>key[j][i];
 		}
 	}
-	long t1 = clock();
+	double t1 = clock();
 	unsigned int output[4];
 	encrypt(input,key,output);
 	for(int i=0;i<4;i++)
@@ -161,8 +161,8 @@ int main()
 		cout<<hex<<(output[i]>>24)<<" "<<((output[i]>>16)&0xFF)<<" "<<((output[i]>>8)&0xFF)<<" "<<((output[i])&0xFF)<<" ";
 	}
 	cout<<endl;
-	long t2 = clock();
-	cout<<t2-t1<<endl<<endl;
+	double t2 = clock();
+	cout<<(((double)(t2 - t1)) * 1000) / CLOCKS_PER_SEC<<endl<<endl;
 	return 0;
 }
 
