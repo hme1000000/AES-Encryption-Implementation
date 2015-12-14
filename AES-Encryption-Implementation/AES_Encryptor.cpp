@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <time.h>
+#include <sstream>
 using namespace std;
 
 unsigned char s_box[256] = 
@@ -136,10 +137,51 @@ void encrypt(unsigned int input[4][4],unsigned int input_key[4][4],unsigned int 
 int main()
 {
 	//cout<<"Enter text"<<endl;
-	freopen("put.txt","r",stdin);
+	freopen("put3.txt","r",stdin);
+	string s_input;
+	string s_key;
+	cin>>s_input;
+	cin>>s_key;
+	double t1 = clock();
 	unsigned int input[4][4];
 	unsigned int key[4][4];
 	for(int i=0;i<4;i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			std::stringstream str;
+			str<<s_input.substr((j*2)+(i*8),2);
+			str >> std::hex >>input[j][i];
+			//input[j][i] = atoi(s_input.substr((j*2)+(i*4),2).c_str());;
+		}
+	}	
+	for(int i=0;i<4;i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			stringstream str;
+			str<<s_key.substr((j*2)+(i*8),2);
+			str >> hex >>key[j][i];
+			//key[j][i] = atoi(s_input.substr((j*2)+(i*4),2).c_str());;
+		}
+	}
+	/*for(int i=0;i<4;i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			cout<<hex<<input[j][i];
+		}
+	}	
+	cout<<endl<<endl;
+	for(int i=0;i<4;i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			cout<<hex<<key[j][i];
+		}
+	}
+	cout<<endl<<endl;
+	/*for(int i=0;i<4;i++)
 	{
 		for(int j=0;j<4;j++)
 		{
@@ -152,8 +194,8 @@ int main()
 		{
 			cin>>hex>>key[j][i];
 		}
-	}
-	double t1 = clock();
+	}*/
+	//double t1 = clock();
 	unsigned int output[4];
 	encrypt(input,key,output);
 	for(int i=0;i<4;i++)
