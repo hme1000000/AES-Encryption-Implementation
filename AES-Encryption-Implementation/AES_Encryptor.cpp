@@ -138,14 +138,14 @@ int main()
 	//cout<<"Enter text"<<endl;
 	freopen("put.txt","r",stdin);
 	unsigned int input[4][4];
+	unsigned int key[4][4];
 	for(int i=0;i<4;i++)
 	{
 		for(int j=0;j<4;j++)
 		{
 			cin>>hex>>input[j][i];
 		}
-	}
-	unsigned int key[4][4];
+	}	
 	for(int i=0;i<4;i++)
 	{
 		for(int j=0;j<4;j++)
@@ -158,11 +158,12 @@ int main()
 	encrypt(input,key,output);
 	for(int i=0;i<4;i++)
 	{
-		cout<<hex<<(output[i]>>24)<<" "<<((output[i]>>16)&0xFF)<<" "<<((output[i]>>8)&0xFF)<<" "<<((output[i])&0xFF)<<" ";
+		//cout<<hex<<(output[i]>>24)<<" "<<((output[i]>>16)&0xFF)<<" "<<((output[i]>>8)&0xFF)<<" "<<((output[i])&0xFF)<<" ";
+		cout<<hex<<output[i];
 	}
 	cout<<endl;
 	double t2 = clock();
-	cout<<(((double)(t2 - t1)) * 1000) / CLOCKS_PER_SEC<<endl<<endl;
+	cout<<"elapse: "<<(((double)(t2 - t1)) * 1000) / CLOCKS_PER_SEC<<endl<<endl;
 	return 0;
 }
 
