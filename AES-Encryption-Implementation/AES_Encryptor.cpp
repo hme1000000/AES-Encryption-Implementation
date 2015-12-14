@@ -1,9 +1,6 @@
 #include <iostream>
 #include <string>
-#include <cmath>
-#include <fstream>
 #include <cstdio>
-#include <cstdint>
 #include <time.h>
 #include <sstream>
 using namespace std;
@@ -152,7 +149,6 @@ int main()
 			std::stringstream str;
 			str<<s_input.substr((j*2)+(i*8),2);
 			str >> std::hex >>input[j][i];
-			//input[j][i] = atoi(s_input.substr((j*2)+(i*4),2).c_str());;
 		}
 	}	
 	for(int i=0;i<4;i++)
@@ -162,45 +158,12 @@ int main()
 			stringstream str;
 			str<<s_key.substr((j*2)+(i*8),2);
 			str >> hex >>key[j][i];
-			//key[j][i] = atoi(s_input.substr((j*2)+(i*4),2).c_str());;
 		}
 	}
-	/*for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cout<<hex<<input[j][i];
-		}
-	}	
-	cout<<endl<<endl;
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cout<<hex<<key[j][i];
-		}
-	}
-	cout<<endl<<endl;
-	/*for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cin>>hex>>input[j][i];
-		}
-	}	
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			cin>>hex>>key[j][i];
-		}
-	}*/
-	//double t1 = clock();
 	unsigned int output[4];
 	encrypt(input,key,output);
 	for(int i=0;i<4;i++)
 	{
-		//cout<<hex<<(output[i]>>24)<<" "<<((output[i]>>16)&0xFF)<<" "<<((output[i]>>8)&0xFF)<<" "<<((output[i])&0xFF)<<" ";
 		cout<<hex<<output[i];
 	}
 	cout<<endl;
