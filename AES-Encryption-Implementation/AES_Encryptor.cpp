@@ -109,10 +109,8 @@ void expand_key(unsigned int key[4][4],unsigned int expanded_key[44])
 	}
 }
 /////////////////////////////////////////////////////////////////////////
-void encrypt(unsigned int input[4][4],unsigned int input_key[4][4],unsigned int output[4])
+void encrypt(unsigned int input[4][4],unsigned int key[44],unsigned int output[4])
 {
-	unsigned int key[44];
-	expand_key(input_key,key);
 	unsigned int add_out[4];	
 	add_key(input,key,0,add_out);
 	unsigned char shift_out[4][4];
@@ -134,39 +132,59 @@ void encrypt(unsigned int input[4][4],unsigned int input_key[4][4],unsigned int 
 int main()
 {
 	//cout<<"Enter text"<<endl;
-	freopen("put3.txt","r",stdin);
+	freopen("put4.txt","r",stdin);
 	string s_input;
 	string s_key;
-	cin>>s_input;
-	cin>>s_key;
+	int n;
+	int m;
+	cin>>n;
 	double t1 = clock();
-	unsigned int input[4][4];
-	unsigned int key[4][4];
-	for(int i=0;i<4;i++)
+	for(int i=0;i<n;i++)
 	{
-		for(int j=0;j<4;j++)
+		cin>>s_input;
+		cin>>s_key;
+		cin>>m;	
+		unsigned int input[4][4];
+		unsigned int key[4][4];
+		for(int i=0;i<4;i++)
 		{
-			std::stringstream str;
-			str<<s_input.substr((j*2)+(i*8),2);
-			str >> std::hex >>input[j][i];
-		}
-	}	
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
+			for(int j=0;j<4;j++)
+			{
+				std::stringstream str;
+				str<<s_input.substr((j*2)+(i*8),2);
+				str >> std::hex >>input[j][i];
+			}
+		}	
+		for(int i=0;i<4;i++)
 		{
-			stringstream str;
-			str<<s_key.substr((j*2)+(i*8),2);
-			str >> hex >>key[j][i];
+			for(int j=0;j<4;j++)
+			{
+				stringstream str;
+				str<<s_key.substr((j*2)+(i*8),2);
+				str >> hex >>key[j][i];
+			}
 		}
+		unsigned int input_key[44];
+		expand_key(key,input_key);
+		unsigned int output[4];
+		for(int i=0;i<m;i++)
+		{			
+			encrypt(input,input_key,output);
+			for(int i=0;i<4;i++)
+			{
+				cout<<hex<<output[i];
+			}
+			cout<<endl;
+			for(int j=0;j<4;j++)
+			{
+				for(int i=0;i<4;i++)
+				{
+					input[i][j] = (output[j]>>(24-(i*8)))&(0xFF);
+				}
+			}
+		}
+		cout<<endl;
 	}
-	unsigned int output[4];
-	encrypt(input,key,output);
-	for(int i=0;i<4;i++)
-	{
-		cout<<hex<<output[i];
-	}
-	cout<<endl;
 	double t2 = clock();
 	cout<<"elapse: "<<(((double)(t2 - t1)) * 1000) / CLOCKS_PER_SEC<<endl<<endl;
 	return 0;
