@@ -48,54 +48,12 @@ unsigned char s_box_after_mul[256] =
 
 unsigned char Rcon[11] = {0x0,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};
 
-//////////////////////////////////////////////////////////////////////////////////
-void shift_rows(unsigned int input[4],unsigned char output[4][4])
-{
-	for(int i=0;i<4;i++)
-	{
-		output[0][i] = input[i]>>24;
-		output[1][i] = (input[(i+1)%4]>>16)&0xFF;
-		output[2][i] = (input[(i+2)%4]>>8)&0xFF;
-		output[3][i] = (input[(i+3)%4])&0xFF;
-	}
-}
-//////////////////////////////////////////////////////////////////////////////////
-void substitute_byte(unsigned char input[4][4],unsigned int output[4][4])
-{
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			output[j][i] = s_box[input[j][i]];
-		}
-	}
-}
-//////////////////////////////////////////////////////////////////////////////////
-void substitute_mix_colomns(unsigned char input[4][4],unsigned int output[4][4])
-{
-	for(int i=0;i<4;i++)
-	{
-		for(int j=0;j<4;j++)
-		{
-			output[j][i] = ((s_box_after_mul[input[j][i]])^
-				(s_box_after_mul[input[(j+1)%4][i]])^(s_box[input[(j+1)%4][i]])^(s_box[input[(j+2)%4][i]])^(s_box[input[(j+3)%4][i]]));			
-		}
-	}
-}
-////////////////////////////////////////////////////////////////////////////////
-void add_key(unsigned int word_input[4][4],unsigned int key[44],unsigned short index,unsigned int output[4])
-{
-	for(int i=0;i<4;i++)
-	{
-		output[i] = ((word_input[0][i]<<24)|(word_input[1][i]<<16)|(word_input[2][i]<<8)|(word_input[3][i]))^key[i+index];
-	}
-}
 //////////////////////////////////////////////////////////////////////////////
-void expand_key(unsigned int key[4][4],unsigned int expanded_key[44])
+void expand_key(unsigned int key[4],unsigned int expanded_key[44])
 {
 	for(int i=0;i<4;i++)
 	{
-		expanded_key[i] = (key[0][i]<<24)|(key[1][i]<<16)|(key[2][i]<<8)|(key[3][i]);
+		expanded_key[i] = key[i];
 	}
 	for(int i=4;i<44;i++)
 	{
@@ -103,119 +61,103 @@ void expand_key(unsigned int key[4][4],unsigned int expanded_key[44])
 		if(i%4 == 0)
 		{
 			temp = (temp<<8)|(temp>>24);
-			temp = (s_box[temp>>24]<<24|s_box[(temp>>16)&0xFF]<<16|s_box[(temp>>8)&0xFF]<<8|s_box[(temp)&0xFF])^(Rcon[i/4]<<24);
+			temp = (s_box[temp>>24]<<24|s_box[(temp>>16)&0xFF]<<16|s_box[(temp>>8)&0xFF]<<8|s_box[(temp)&0xFF])^(Rcon[i>>2]<<24);
 		}
 		expanded_key[i] = expanded_key[i-4]^temp;
 	}
 }
-/////////////////////////////////////////////////////////////////////////
-void encrypt(unsigned int input[4][4],unsigned int key[44],unsigned int output[4])
+////////////////////////////////////////////////////////////////////////////
+void encrypt(unsigned int input[4],unsigned int key[44],unsigned int output[4])
 {
-	unsigned int add_out[4];	
-	add_key(input,key,0,add_out);
-	unsigned char shift_out[4][4];
-	for(int i=1;i<10;i++)
+	for(int i=0;i<4;i++)
+	{
+		output[i] = input[i]^key[i];
+	}		
+	unsigned int shift_out[4][4];
+	for(int k=1;k<10;k++)
 	{		
-		shift_rows(add_out,shift_out);
-		unsigned int mix_out[4][4];
-		substitute_mix_colomns(shift_out,mix_out);
-		add_key(mix_out,key,(4*i),add_out);
-	}
-	shift_rows(add_out,shift_out);
-	unsigned int sub_out[4][4];
-	substitute_byte(shift_out,sub_out);
-	add_key(sub_out,key,40,output);
-}
+		for(int i=0;i<4;i++)
+		{
+			shift_out[0][i] = output[i]>>24;
+			shift_out[1][i] = (output[(i+1)&0x3]>>16)&0xFF;
+			shift_out[2][i] = (output[(i+2)&0x3]>>8)&0xFF;
+			shift_out[3][i] = output[(i+3)&0x3]&0xFF;
+		}
+		for(int i=0;i<4;i++)
+		{
+			output[i] = ((s_box_after_mul[shift_out[0][i]])^
+				(s_box_after_mul[shift_out[1][i]])^(s_box[shift_out[1][i]])^(s_box[shift_out[2][i]])^(s_box[shift_out[3][i]]))<<24;
 
+			output[i] = output[i]|(((s_box_after_mul[shift_out[1][i]])^
+				(s_box_after_mul[shift_out[2][i]])^(s_box[shift_out[2][i]])^(s_box[shift_out[3][i]])^(s_box[shift_out[0][i]]))<<16);
+
+			output[i] = output[i]|(((s_box_after_mul[shift_out[2][i]])^
+				(s_box_after_mul[shift_out[3][i]])^(s_box[shift_out[3][i]])^(s_box[shift_out[0][i]])^(s_box[shift_out[1][i]]))<<8);
+
+			output[i] = output[i]|((s_box_after_mul[shift_out[3][i]])^
+				(s_box_after_mul[shift_out[0][i]])^(s_box[shift_out[0][i]])^(s_box[shift_out[1][i]])^(s_box[shift_out[2][i]]));
+			output[i] = output[i]^key[i+(k*4)];
+		}
+	}
+	for(int i=0;i<4;i++)
+		{
+			shift_out[0][i] = output[i]>>24;			
+			shift_out[1][i] = (output[(i+1)&0x3]>>16)&0xFF;
+			shift_out[2][i] = (output[(i+2)&0x3]>>8)&0xFF;
+			shift_out[3][i] = output[(i+3)&0x3]>>0&0xFF;
+		}
+	for(int i=0;i<4;i++)
+	{
+		output[i] = s_box[shift_out[0][i]]<<24;
+		output[i] = output[i]|((s_box[shift_out[1][i]])<<16);
+		output[i] = output[i]|((s_box[shift_out[2][i]])<<8);
+		output[i] = output[i]|(s_box[shift_out[3][i]]);
+		output[i] = output[i]^key[i+40];
+	}
+}
+////////////////////////////////////////////////////////////////////////
 
 
 int main()
-{
-	//cout<<"Enter text"<<endl;
-	freopen("put4.txt","r",stdin);
-	string s_input;
-	string s_key;
-	int n;
-	int m;
+{	
+	freopen("put3.txt","r",stdin);
+	freopen("AES_Output.txt","w",stdout);	
+	int n;	
 	cin>>n;
 	double t1 = clock();
 	for(int i=0;i<n;i++)
 	{
+		string s_input;
+		string s_key;
+		int m;
+		unsigned int input[4];
+		unsigned int key[4];
 		cin>>s_input;
+		char c_input[33];
+		strcpy(c_input,s_input.c_str());
+		sscanf(c_input,"%8X%8X%8X%8X",&input[0],&input[1],&input[2],&input[3]);
 		cin>>s_key;
+		char c_key[33];
+		strcpy(c_key,s_key.c_str());
+		sscanf(c_key,"%8X%8X%8X%8X",&key[0],&key[1],&key[2],&key[3]);
 		cin>>m;	
-		unsigned int input[4][4];
-		unsigned int key[4][4];
-		for(int i=0;i<4;i++)
-		{
-			for(int j=0;j<4;j++)
-			{
-				std::stringstream str;
-				str<<s_input.substr((j*2)+(i*8),2);
-				str >> std::hex >>input[j][i];
-			}
-		}	
-		for(int i=0;i<4;i++)
-		{
-			for(int j=0;j<4;j++)
-			{
-				stringstream str;
-				str<<s_key.substr((j*2)+(i*8),2);
-				str >> hex >>key[j][i];
-			}
-		}
 		unsigned int input_key[44];
 		expand_key(key,input_key);
 		unsigned int output[4];
-		for(int i=0;i<m;i++)
+		encrypt(input,input_key,output);
+		for(int i=1;i<m;i++)
 		{			
-			encrypt(input,input_key,output);
-			for(int i=0;i<4;i++)
+			encrypt(output,input_key,output);			
+		}
+		for(int i=0;i<4;i++)
 			{
 				cout<<hex<<output[i];
 			}
 			cout<<endl;
-			for(int j=0;j<4;j++)
-			{
-				for(int i=0;i<4;i++)
-				{
-					input[i][j] = (output[j]>>(24-(i*8)))&(0xFF);
-				}
-			}
-		}
-		cout<<endl;
 	}
 	double t2 = clock();
 	cout<<"elapse: "<<(((double)(t2 - t1)) * 1000) / CLOCKS_PER_SEC<<endl<<endl;
 	return 0;
 }
 
-// code used to generate s_box_after_shift
-	//ifstream myfile ("scanner_output.txt");
-	//freopen("s_box.txt","w",stdout);	
-	/*int output[256];
-	cout<<"{\n";
-	for(int i=0;i<256;i++)
-	{
-		if(i%16 == 0)
-		{
-			cout<<"\t";
-		}
-		if(s_box[i]>>7 == 1)
-		{
-			output[i] = ((s_box[i]<<1)^0x11B);
-			cout<<"0x"<<hex<<output[i]<<",";
-		}
-		else
-		{
-			output[i] = s_box[i]<<1;
-			cout<<"0x"<<hex<<output[i]<<",";
-		}
-		if(i%16 == 15)
-		{
-			cout<<endl;
-		}
-		else
-			cout<<" ";
-	}
-	cout<<"}\n";*/
+
