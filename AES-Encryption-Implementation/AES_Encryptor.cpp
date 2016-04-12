@@ -1,9 +1,11 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <cstdio>
 #include <time.h>
 #include <sstream>
 using namespace std;
+#include <cstring>
 
 unsigned char s_box[256] = 
  {
@@ -49,7 +51,7 @@ unsigned char s_box_after_mul[256] =
 unsigned char Rcon[11] = {0x0,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};
 
 //////////////////////////////////////////////////////////////////////////////
-void expand_key(unsigned int key[4],unsigned int expanded_key[44])
+inline void expand_key(unsigned int key[4],unsigned int expanded_key[44])
 {
 	for(int i=0;i<4;i++)
 	{
@@ -120,8 +122,8 @@ void encrypt(unsigned int input[4],unsigned int key[44],unsigned int output[4])
 
 int main()
 {	
-	freopen("put3.txt","r",stdin);
-	freopen("AES_Output.txt","w",stdout);	
+	//freopen("put3.txt","r",stdin);
+	//freopen("AES_Output.txt","w",stdout);	
 	int n;	
 	cin>>n;
 	double t1 = clock();
@@ -151,7 +153,9 @@ int main()
 		}
 		for(int i=0;i<4;i++)
 			{
-				cout<<hex<<output[i];
+				//cout<<hex<<output[i];
+				printf("%08X",output[i]);
+				//cout << setfill('0')<< setw(8)<< hex  <<output[i];
 			}
 			cout<<endl;
 	}
